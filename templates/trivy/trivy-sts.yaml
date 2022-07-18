@@ -41,6 +41,18 @@ spec:
         runAsUser: 10000
         fsGroup: 10000
       automountServiceAccountToken: false
+      initContainers:
+      # Just a fix due to fsGroup does not work
+      - name: init-volumes
+        image: {{ .Values.trivy.image.repository }}:{{ .Values.trivy.image.tag }}
+        securityContext:
+          runAsUser: 0
+        command: ['sh', '-c', 'chown -R 10000:10000 /home/scanner/.cache']
+        volumeMounts:
+          - name: data
+            mountPath: /home/scanner/.cache
+            subPath: {{ .Values.persistence.persistentVolumeClaim.trivy.subPath }}
+            readOnly: false
       containers:
         - name: trivy
           image: {{ .Values.trivy.image.repository }}:{{ .Values.trivy.image.tag }}

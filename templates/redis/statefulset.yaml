@@ -35,6 +35,17 @@ spec:
         {{- toYaml . | nindent 8 }}
       {{- end }}
       automountServiceAccountToken: false
+      initContainers:
+      # Just a fix due to fsGroup does not work
+      - name: init-volumes
+        image: {{ .Values.redis.internal.image.repository }}:{{ .Values.redis.internal.image.tag }}
+        securityContext:
+          runAsUser: 0
+        command: ['sh', '-c', 'chown -R 999:999 /var/lib/redis']
+        volumeMounts:
+        - name: data
+          mountPath: /var/lib/redis
+          subPath: {{ $redis.subPath }}
       containers:
       - name: redis
         image: {{ .Values.redis.internal.image.repository }}:{{ .Values.redis.internal.image.tag }}

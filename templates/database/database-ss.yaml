@@ -37,6 +37,16 @@ spec:
       {{- end }}
       automountServiceAccountToken: false
       initContainers:
+      # Just a fix due to fsGroup does not work
+      - name: init-volumes
+        image: {{ .Values.database.internal.image.repository }}:{{ .Values.database.internal.image.tag }}
+        securityContext:
+          runAsUser: 0
+        command: ['sh', '-c', 'chown -R 999:999 /var/lib/postgresql/data']
+        volumeMounts:
+          - name: database-data
+            mountPath: /var/lib/postgresql/data
+            subPath: {{ $database.subPath }}
       # as we change the data directory to a sub folder to support psp, the init container here
       # is used to migrate the existing data. See https://github.com/goharbor/harbor-helm/issues/756
       # for more detail.

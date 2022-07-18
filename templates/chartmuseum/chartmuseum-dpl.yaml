@@ -46,6 +46,17 @@ spec:
         {{- toYaml . | nindent 8 }}
       {{- end }}
       automountServiceAccountToken: false
+      initContainers:
+      # Just a fix due to fsGroup does not work
+      - name: init-volumes
+        image: {{ .Values.chartmuseum.image.repository }}:{{ .Values.chartmuseum.image.tag }}
+        securityContext:
+          runAsUser: 0
+        command: ['sh', '-c', 'chown -R 10000:10000 /chart_storage']
+        volumeMounts:
+        - name: chartmuseum-data
+          mountPath: /chart_storage
+          subPath: {{ .Values.persistence.persistentVolumeClaim.chartmuseum.subPath }}
       containers:
       - name: chartmuseum
         image: {{ .Values.chartmuseum.image.repository }}:{{ .Values.chartmuseum.image.tag }}

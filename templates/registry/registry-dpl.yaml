@@ -46,6 +46,17 @@ spec:
         {{- toYaml . | nindent 8 }}
       {{- end }}
       automountServiceAccountToken: false
+      initContainers:
+      # Just a fix due to fsGroup does not work
+      - name: init-volumes
+        image: {{ .Values.registry.registry.image.repository }}:{{ .Values.registry.registry.image.tag }}
+        securityContext:
+          runAsUser: 0
+        command: ['sh', '-c', "chown -R 10000:10000 {{ .Values.persistence.imageChartStorage.filesystem.rootdirectory }}"]
+        volumeMounts:
+        - name: registry-data
+          mountPath: {{ .Values.persistence.imageChartStorage.filesystem.rootdirectory }}
+          subPath: {{ .Values.persistence.persistentVolumeClaim.registry.subPath }}
       containers:
       - name: registry
         image: {{ .Values.registry.registry.image.repository }}:{{ .Values.registry.registry.image.tag }}

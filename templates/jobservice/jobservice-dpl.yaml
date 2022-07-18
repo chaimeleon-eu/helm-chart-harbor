@@ -46,6 +46,17 @@ spec:
         {{- toYaml . | nindent 8 }}
       {{- end }}
       automountServiceAccountToken: false
+      initContainers:
+      # Just a fix due to fsGroup does not work
+      - name: init-volumes
+        image: {{ .Values.jobservice.image.repository }}:{{ .Values.jobservice.image.tag }}
+        securityContext:
+          runAsUser: 0
+        command: ['sh', '-c', 'chown -R 10000:10000 /var/log/jobs']
+        volumeMounts:
+        - name: job-logs
+          mountPath: /var/log/jobs
+          subPath: {{ .Values.persistence.persistentVolumeClaim.jobservice.subPath }}
       containers:
       - name: jobservice
         image: {{ .Values.jobservice.image.repository }}:{{ .Values.jobservice.image.tag }}
